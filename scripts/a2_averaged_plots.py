@@ -5,12 +5,7 @@ import numpy as np
 
 # Load your data
 df = pd.read_csv("data/temperature_timeseries.csv", parse_dates=["valid_time"])
-
-# Ensure data is sorted
 df = df.sort_values("valid_time")
-
-# Convert temperature to Celsius if needed (optional step if not already in Celsius)
-# df["t2m"] = df["t2m"] - 273.15
 
 # 1. Seasonal profile across all years
 df['month'] = df['valid_time'].dt.month
@@ -32,7 +27,7 @@ df['hour'] = df['valid_time'].dt.hour
 diurnal_avg = df.groupby('hour')['t2m'].mean()
 
 diurnal_avg_indices = diurnal_avg.index.tolist()
-diurnal_avg_vals = diurnal_avg.values.tolist()[7:] + diurnal_avg.values.tolist()[:7]
+diurnal_avg_vals = diurnal_avg.values.tolist()
 
 plt.figure(figsize=(10, 6))
 plt.plot(diurnal_avg_indices, diurnal_avg_vals)
@@ -78,12 +73,10 @@ def autocorrelation(series, lag):
     return series.autocorr(lag=lag)
 
 hourly_corr = autocorrelation(df['t2m'], lag=1)
-
-# First resample to DataFrame, then access 't2m'
-daily_df = df.resample('D', on='valid_time').mean()
+daily_df = df.resample('D', on='valid_time').mean() # First resample to DataFrame, then access 't2m'
 daily_corr = autocorrelation(daily_df['t2m'], lag=1)
 
-monthly_df = df.resample('ME', on='valid_time').mean()
+monthly_df = df.resample('M', on='valid_time').mean()
 monthly_corr = autocorrelation(monthly_df['t2m'], lag=1)
 
 corrs = [hourly_corr, daily_corr, monthly_corr]
