@@ -52,6 +52,9 @@ def main():
         # To account for time zone difference with respect to GMT
         combined_df['valid_time'] = pd.to_datetime(combined_df['valid_time']) - pd.Timedelta(hours=7)
 
+        # Convert Kelvin to Celsius:
+        combined_df['t2m'] = combined_df['t2m']-273.15
+
         # Average temperature spatially
         combined_df = combined_df.groupby("valid_time")["t2m"].mean().reset_index()
 
