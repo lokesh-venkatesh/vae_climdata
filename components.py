@@ -36,7 +36,8 @@ def construct_encoder(input_shape=INPUT_SIZE, interim_filters=64, latent_filter=
                 nn.Conv1d(interim_filters, 2 * latent_filter, kernel_size=3, stride=2, padding=1),
             )
 
-        def forward(self, x):
+        def forward(self, x, seasonal):
+            # Here, both `x` and `seasonal` are used
             x = x.view(x.size(0), 1, -1)  # Reshape to (batch, 1, input_shape)
             x = self.conv(x)
             z_mean = x[:, :self.latent_filter, :]
@@ -47,7 +48,7 @@ def construct_encoder(input_shape=INPUT_SIZE, interim_filters=64, latent_filter=
     return Encoder(input_shape, interim_filters, latent_filter)
 
 
-def construct_decoder(latent_dim=LATENT_SIZE, latent_filter=32, interim_filters=64):
+def construct_decoder(latent_dim=LATENT_DIM, latent_filter=32, interim_filters=64):
     """
     Constructs and returns the Decoder network with default parameters.
     """
@@ -65,19 +66,20 @@ def construct_decoder(latent_dim=LATENT_SIZE, latent_filter=32, interim_filters=
                 nn.ReLU(),
                 nn.ConvTranspose1d(interim_filters, interim_filters, kernel_size=3, stride=2, padding=1, output_padding=1),
                 nn.ReLU(),
-                nn.ConvTranspose1d(interim_filters, 1, kernel_size=5, stride=3, padding=2, output_padding=1),
+                nn.ConvTranspose1d(interim_filters, 1, kernel_size=6, stride=3, padding=2, output_padding=1),  # <-- Changed from kernel_size=5 to 6
             )
 
-        def forward(self, x):
-            # x shape: (batch_size, latent_filter, latent_dim)
+        def forward(self, x, seasonal):
             x = self.decoder(x)
             x = x.view(x.size(0), -1)  # Flatten to (batch_size, seq_len)
+            x = x[:, :1536]  # Trim in case of overshoot
             return x
-    
+
     return Decoder(latent_dim, latent_filter, interim_filters)
 
 
-def construct_seasonal_prior(latent_dim=LATENT_SIZE, DEGREE=DEGREE, latent_filter=32):
+
+def construct_seasonal_prior(latent_dim=LATENT_DIM, DEGREE=DEGREE, latent_filter=32):
     """
     Constructs and returns the Seasonal Prior network with default parameters.
     """

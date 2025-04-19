@@ -18,19 +18,39 @@ class VAE(nn.Module):
         else:
             self.noise_log_var = noise_log_var
 
-    def forward(self, values, seasonal):
-        # Encoder pass
-        z_mean, z_log_var, z = self.encoder(values)
-        # Decoder pass
-        reconstructed = self.decoder(z)
-        # Seasonal prior pass
-        seasonal_z_mean, seasonal_z_log_var, _ = self.prior(seasonal)
+    def forward(self, x, seasonal):
+        # Encoder: generates the mean and log variance of the latent space
+        z_mean, z_log_var, z = self.encoder(x, seasonal)
 
-        # Losses
-        recon_loss = log_lik_normal_sum(values, reconstructed, self.noise_log_var) / self.input_size
-        kl_loss = kl_divergence_sum(z_mean, z_log_var, seasonal_z_mean, seasonal_z_log_var) / self.input_size
+        # Sample z from the latent space (using reparameterization trick)
+        z = self.reparameterize(z_mean, z_log_var)
+
+        # Decoder: reconstruct the input based on z and seasonal info
+        reconstructed = self.decoder(z, seasonal)
+
+        # Print shapes for debugging
+        print(f"Input shape: {x.shape}")  # Shape of the input (x)
+        print(f"Reconstructed shape: {reconstructed.shape}")  # Shape of the reconstructed output
+
+        # Compute the reconstruction loss and KL divergence
+        recon_loss = log_lik_normal_sum(x, reconstructed, self.noise_log_var) / self.input_size
+        kl_loss = self.kl_divergence(z_mean, z_log_var)
 
         return reconstructed, recon_loss, kl_loss
+
+    def reparameterize(self, z_mean, z_log_var):
+        """
+        Reparameterization trick to sample z from the normal distribution defined by 
+        z_mean and z_log_var.
+        """
+        eps = torch.randn_like(z_mean)
+        return z_mean + torch.exp(0.5 * z_log_var) * eps
+
+    def kl_divergence(self, mu, log_var):
+        """
+        Computes KL divergence between N(mu, sigma) and standard normal N(0,1).
+        """
+        return -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) / mu.size(0)
 
     def training_step(self, batch, optimizer):
         self.train()
@@ -57,19 +77,27 @@ class VAE(nn.Module):
                 'recon_loss': recon_loss.item(),
                 'kl_loss': kl_loss.item()
             }
+        
+    def encode(self, x, seasonal):
+        self.eval()
+        with torch.no_grad():
+            z_mean, z_log_var, _ = self.encoder(x, seasonal)
+        return z_mean, z_log_var
+
+    @property
+    def device(self):
+        return next(self.parameters()).device
 
 
-def construct_VAE(input_size=INPUT_SIZE, latent_size=LATENT_SIZE, DEGREE=DEGREE, 
+def construct_VAE(input_size=INPUT_SIZE, latent_size=LATENT_DIM, DEGREE=DEGREE, 
                   interim_filters=64, latent_filter=32, noise_log_var=None):
     """
     Constructs and returns a VAE model with default parameters.
     """
-    # Construct the Encoder, Decoder, and Seasonal Prior
     encoder = construct_encoder(input_shape=input_size, interim_filters=interim_filters, latent_filter=latent_filter)
     decoder = construct_decoder(latent_dim=latent_size, latent_filter=latent_filter, interim_filters=interim_filters)
     seasonal_prior = construct_seasonal_prior(latent_dim=latent_size, DEGREE=DEGREE, latent_filter=latent_filter)
 
-    # Construct the VAE model
     vae = VAE(encoder=encoder, decoder=decoder, prior=seasonal_prior, 
               input_size=input_size, noise_log_var=noise_log_var)
     

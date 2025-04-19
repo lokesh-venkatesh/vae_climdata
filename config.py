@@ -1,24 +1,17 @@
-# number of days the lengths of the data-chunks correspond to
-N_DAYS = 64
+import torch
 
-# dimensions of the input data
-INPUT_SIZE = N_DAYS*24
-# degree of fourier series for seasonal inputs
-DEGREE = 3
-# the hours associated with each latent variable
-LATENT_SIZE = 4*24
-
-# train and test split
-TRAINING_RATIO = 0.8
-
-# learning rate, number of epochs and batch size
+DAYS = 64
+INPUT_SIZE = DAYS*24           # 64 days of hourly temps
+LATENT_DIM = 32             # size of latent vector z
+SEASONAL_INTERVAL = 24      # use one seasonal embedding per day
+DEGREE = 3                  # for Fourier features
+HIDDEN_DIM = 128            # used in encoder/decoder hidden layers
+BATCH_SIZE = 64
+EPOCHS = 10
 LEARNING_RATE = 1e-3
-EPOCHS = 100
-BATCH_SIZE = 32
 
-# model features
-# Parameters
-input_shape = None #INPUT_SIZE
-latent_dim = None #INPUT_SIZE//LATENT_SIZE
-latent_filter = 10
-interim_filters = 2*latent_filter
+# Optimizer and other configurations
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+# Model saving path
+MODEL_SAVE_PATH = 'models/vae_model_final.pth'
