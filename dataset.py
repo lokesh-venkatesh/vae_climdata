@@ -1,6 +1,8 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from config import *
+from utils import *
 
 time_series_df = pd.read_csv('data/final_timeseries.csv', index_col=None)
 
@@ -17,5 +19,5 @@ def flatten_time_series_into_chunks_of_data(dft):
 if __name__=="__main__":
     np.random.seed(42)
     dft_reshaped = flatten_time_series_into_chunks_of_data(time_series_df).sample(frac=1)
-    dft_reshaped.to_csv(f'data/phoenix_{N_DAYS_PER_CHUNK}days.csv')
+    dft_reshaped.to_csv(f'data/phoenix_{N_DAYS}days.csv')
     print(dft_reshaped.head())

@@ -1,19 +1,12 @@
-# define constants
-N_DAYS_PER_CHUNK = 64
-INPUT_SIZE = N_DAYS_PER_CHUNK*24 # dimensions of the input data
-DEGREE = 3 # degree of fourier series for seasonal inputs
-LATENT_SIZE = 4*24 # the hours associated with each latent variable
+# number of days the lengths of the data-chunks correspond to
+N_DAYS = 64
 
-# Parameters (set these as needed)
-#INPUT_SIZE = None  # Replace with actual input size
-#LATENT_SIZE = None  # Replace with actual latent size divisor
-latent_dim = INPUT_SIZE // LATENT_SIZE
-latent_filter = 10
-interim_filters = 2 * latent_filter
-#DEGREE = None  # Replace with your seasonal degree term
+# dimensions of the input data
+INPUT_SIZE = N_DAYS*24
+# degree of fourier series for seasonal inputs
+DEGREE = 3
+# the hours associated with each latent variable
+LATENT_SIZE = 4*24
 
-# hyperparams
-learning_rate = 0.001
-batch_size = 32
-epochs = 100
+# train and test split
 training_ratio = 0.8
