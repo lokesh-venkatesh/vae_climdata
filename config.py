@@ -9,4 +9,16 @@ DEGREE = 3
 LATENT_SIZE = 4*24
 
 # train and test split
-training_ratio = 0.8
+TRAINING_RATIO = 0.8
+
+# learning rate, number of epochs and batch size
+LEARNING_RATE = 1e-3
+EPOCHS = 100
+BATCH_SIZE = 32
+
+# model features
+# Parameters
+input_shape = None #INPUT_SIZE
+latent_dim = None #INPUT_SIZE//LATENT_SIZE
+latent_filter = 10
+interim_filters = 2*latent_filter
